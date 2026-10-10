@@ -23,7 +23,7 @@ while (true)
             break;
 
         case "2":
-            Console.WriteLine("Search: coming next.");
+            SearchVehicle(parking);
             break;
 
         case"3":
@@ -54,26 +54,38 @@ static void ShowMenu()
         Console.WriteLine("Choose an option: ");
 
 }
-
+// Park vehicle and two MC can be parked in one space.
 static void ParkVehicle(string[] parking)
 {
     string registration = ReadRegistration();
     string vehicleType = ReadVehicleType();
 
-    int index = FindEmptySpace(parking);
+    int index = FindEmptySpace(parking, vehicleType);
 
     if (index != -1)
     {
-        parking[index] = string.Join("#", vehicleType, registration);
-        Console.WriteLine($"Vehicle parked in space {index + 1}.");
+        string vehicle = vehicleType + "#" + registration;
+
+        if (parking[index]=="")
+        {
+            parking[index] = vehicle;
+        }
+        else
+        {
+            parking[index] += "|" + vehicle;
+        }
+
+        Console.WriteLine($"Vehicle parked in space {index +1}.");
     }
     else
     {
         Console.WriteLine("No empty spaces avialable.");
     }
 
-    //2. Take input data and check if it is valid.
+
 }
+
+// Get registration number
 static string ReadRegistration()
 {
     while (true)
@@ -90,7 +102,7 @@ static string ReadRegistration()
     }
 }
 
-// Check vehicle type and find a parking space
+// Check vehicle type 
 
 
 static string ReadVehicleType()
@@ -107,7 +119,8 @@ static string ReadVehicleType()
     }
 }
 
-static int FindEmptySpace(string[] parking)
+//Find parking space 
+static int FindEmptySpace(string[] parking, string vehicleType)
 {
         for (int i = 0; i < parking.Length; i++)
         {
@@ -115,6 +128,43 @@ static int FindEmptySpace(string[] parking)
             {
                 return i;
             }
+            if (vehicleType == "MC" && parking[i].StartsWith("MC#") && !parking[i].Contains('|'))
+            {
+                return i;
+            }
         }
+
         return -1;
+}
+
+static void SearchVehicle(string[] parking)
+{
+    string registration = ReadRegistration();
+    int index = FindVehicle(parking, registration);
+
+    if (index !=-1)
+    {
+        Console.WriteLine($"Vehicle found in space {index +1}.");
+    }
+    else
+    {
+        Console.WriteLine("Vehicle not found.");
+    }
+}
+
+static int FindVehicle(string[] parking, string registration)
+{
+    for (int i = 0;i < parking.Length;i++)
+    {
+        string[] vehicles = parking[i].Split('|');
+
+        foreach (string vehicle in vehicles)
+        {
+            if (vehicle.EndsWith("#" + registration))
+            {
+                return i;
+            }
+        }
+    }
+    return -1;
 }

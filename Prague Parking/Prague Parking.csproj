@@ -6,7 +6,6 @@
     <RootNamespace>Prague_Parking</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-	<UseAppHost>false</UseAppHost>
 </PropertyGroup>
 
 </Project>
