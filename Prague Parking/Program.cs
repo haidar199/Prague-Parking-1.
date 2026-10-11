@@ -4,6 +4,7 @@
 using System.Diagnostics;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.InteropServices.Marshalling;
+using System.Threading.Channels;
 
 string[] parking = new string[100];
 Array.Fill(parking, ""); //sets every space to empty string
@@ -27,11 +28,11 @@ while (true)
             break;
 
         case"3":
-            Console.WriteLine("Remove: coming next.");
+            RemoveVehicle(parking);
             break;
         
         case "4":
-            Console.WriteLine("Move: coming next.");
+            MoveVehicle(parking);
             break;
 
         case "0":
@@ -42,7 +43,7 @@ while (true)
             break;
     }
 }
-
+// Display the menu.
 static void ShowMenu()
 {
         Console.WriteLine("\n--- Prague Parking ---");
@@ -102,7 +103,7 @@ static string ReadRegistration()
     }
 }
 
-// Check vehicle type 
+// Check vehicle type Car or Mc 
 
 
 static string ReadVehicleType()
@@ -119,7 +120,7 @@ static string ReadVehicleType()
     }
 }
 
-//Find parking space 
+//Find first available space for a vehicle. 
 static int FindEmptySpace(string[] parking, string vehicleType)
 {
         for (int i = 0; i < parking.Length; i++)
@@ -136,7 +137,7 @@ static int FindEmptySpace(string[] parking, string vehicleType)
 
         return -1;
 }
-
+//Shows where the vehicle is parked
 static void SearchVehicle(string[] parking)
 {
     string registration = ReadRegistration();
@@ -152,6 +153,7 @@ static void SearchVehicle(string[] parking)
     }
 }
 
+// Returns the index of where the vehicle is.
 static int FindVehicle(string[] parking, string registration)
 {
     for (int i = 0;i < parking.Length;i++)
@@ -167,4 +169,124 @@ static int FindVehicle(string[] parking, string registration)
         }
     }
     return -1;
+}
+
+// Remove a vehicle from the parking garage.
+
+static void RemoveVehicle(string[] parking)
+{
+    string registration = ReadRegistration() ;
+    int index = FindVehicle(parking, registration);
+
+    if (index == -1)
+    {
+        Console.WriteLine("Vehicle not found.");
+        return;
+    }
+
+    RemoveFromSpace(parking, index ,registration);
+
+    Console.WriteLine($"Vehicle removed from space {index +1}.");
+}
+// Remove one MC while keeping the other one.
+static void RemoveFromSpace(string[] parking, int index ,string registration)
+{
+    string[] vehicle = parking[index].Split("|");
+
+    if (vehicle.Length == 1)
+    {
+        parking[index] = "";
+    }
+    else if (vehicle[0].EndsWith("#" + registration))
+    {
+        parking[index] = vehicle[1];
+    }
+    else
+    {
+        parking[index]=vehicle[0];
+    }
+}
+// Reads a parking space number and returns its index.
+static int ReadParkingSpace()
+{
+    while (true)
+    {
+        Console.WriteLine("Enter new parking space (1-100): ");
+        string input= Console.ReadLine() ?? "";
+
+        if (int.TryParse(input, out int space) && space >= 1 && space <=100)
+        {
+            return space - 1;
+        }
+
+        Console.WriteLine("Enter a number between 1 and 100.");
+    }
+}
+// returns complete vehicle´s information
+static string GetVehicle(string parkingSpace, string registration)
+{
+    string[] vehicles = parkingSpace.Split("|");
+
+    foreach (string vehicle in vehicles)
+    {
+        if (vehicle.EndsWith("#" + registration))
+        {
+            return vehicle;
+        }
+    }
+    return "";
+}
+// checks whether a vehicle can be parked in a selected space
+static bool CanParkInSpace(string parkingSpace, string vehicle)
+{
+    if (parkingSpace == "")
+    {
+        return true;
+    }
+    if (vehicle.StartsWith("MC#") && parkingSpace.StartsWith("MC#") && !parkingSpace.Contains('|'))
+    {
+        return true;
+    }
+    return false;
+}
+// move a vehicle to a selected space.
+static void MoveVehicle(string[] parking)
+{
+    string registration = ReadRegistration();
+    int oldIndex = FindVehicle(parking, registration);
+
+    if (oldIndex == -1)
+    {
+        Console.WriteLine("Vehicle not found.");
+        return;
+    }
+
+    int newIndex = ReadParkingSpace();
+
+    if (oldIndex == newIndex)
+    {
+        Console.WriteLine("Vehicle is already in that space.");
+        return;
+    }
+
+    string vehicle = GetVehicle(parking[oldIndex], registration);
+    if (!CanParkInSpace(parking[newIndex], vehicle))
+    {
+        Console.WriteLine("The selected space is not available.");
+        return;
+    }
+
+
+    RemoveFromSpace(parking, oldIndex, registration);//remove vehicle from old space before adding it to a new one,
+
+    if (parking[newIndex]=="")
+    {
+        parking[newIndex] = vehicle;
+    }
+    else
+    {
+        parking[newIndex] += "|" + vehicle;
+    }
+
+    Console.WriteLine($"Vehicle moved from space {oldIndex +1} to space {newIndex +1}.");
 }
